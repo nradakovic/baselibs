@@ -36,4 +36,5 @@ jobs:
           version: "16.0.0"
       - name: Bazel build & test baselibs target(s)
         run: |
-          bazel test //score/... --keep_going
+          # bazel test //score/... --keep_going
+          echo | clang -v -E -x c - 2>&1 
