@@ -34,6 +34,9 @@ jobs:
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: "16.0.0"
+      - name: Install deps
+        run: |
+          sudo apt install libtinfo5
       - name: Bazel build & test baselibs target(s)
         run: |
           # bazel test //score/... --keep_going
