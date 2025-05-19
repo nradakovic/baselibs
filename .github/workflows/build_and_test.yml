@@ -30,13 +30,10 @@ jobs:
         uses: bazel-contrib/setup-bazel@0.9.1
       # This step is needed due to issue with the Clang Bazel toolchain setup
       # Bug ticket: https://github.com/eclipse-score/score/issues/1104
-      - name: Set up Clang 
-      #   uses: egor-tensin/setup-clang@v1
-      #   with:
-      #     version: 15
-      #     platform: x64
-        run: |
-          sudo apt install clang
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "16.0.0"
       - name: Bazel build & test baselibs target(s)
         run: |
           bazel test //score/... --keep_going
