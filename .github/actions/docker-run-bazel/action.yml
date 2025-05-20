@@ -1,0 +1,118 @@
+name: "Dependix Docker Run Action"
+description: "A composite action to run Bazel build, run, and test targets inside a Docker container"
+inputs:
+  image:
+    description: "Docker image to use"
+    required: true
+    type: string
+  output_user_cache:
+    description: "Path to the bazel output user cache"
+    required: true
+    type: string
+  command:
+    description: "Bazel command to use (build, test, run)"
+    required: true
+    type: string
+  targets:
+    description: "List of Bazel targets"
+    required: true
+    type: string[]
+  environment_variables:
+    description: "List of environment variables"
+    required: false
+    default: ""
+  volume_bindings:
+    description: "List of volume bindings"
+    required: false
+    default: ""
+  workdir:
+    description: "Working directory inside docker"
+    required: false
+    default: "/workspace"
+  configs:
+    description: "List of Bazel target configurations"
+    required: false
+    default: ""
+  options:
+    description: "List of Bazel option configurations"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare environment variables
+      shell: bash
+      run: |
+        # Process the input string to remove leading dashes and quotes for environment_variables, then format it for Docker
+        input_string="${{ inputs.environment_variables }}"
+        if [ ! -z "$input_string" ]; then
+          env_vars=$(echo "$input_string" | tr '\n' ' ' | sed -e 's/- //g' | awk '{$1=$1; print}' | sed -e 's/ / -e /g' -e 's/^/-e /')
+          echo "Parsed string: $env_vars"
+          echo "env_vars=$env_vars" >> $GITHUB_ENV
+        else
+          echo "env_vars=" >> $GITHUB_ENV
+        fi
+    - name: Prepare volume bindings (with cache)
+      shell: bash
+      run: |
+        # Process the input string to remove leading dashes and quotes for volume_bindings, then format it for Docker
+        input_string="${{ inputs.volume_bindings }}"
+        if [ ! -z "$input_string" ]; then
+          vol_bids=$(echo "$input_string" | tr '\n' ' ' | sed -e 's/- //g' | awk '{$1=$1; print}' | sed -e 's/ / -v /g' -e 's/^/-v /')
+          echo "Parsed string: $vol_bids"
+          echo "vol_bids=$vol_bids" >> $GITHUB_ENV
+        else
+          echo "vol_bids=" >> $GITHUB_ENV
+        fi
+    - name: Prepare build targets
+      shell: bash
+      run: |
+        # Process the input string to remove leading dashes and quotes for build_targets, then format it for Docker
+        input_string="${{ inputs.targets }}"
+        if [ ! -z "$input_string" ]; then
+          targets=$(echo "$input_string" | tr '\n' ' ' | sed -e 's/- //g' | awk '{$1=$1; print}')
+          echo "Parsed string: $targets"
+          echo "targets=$targets" >> $GITHUB_ENV
+        else
+          echo "targets=" >> $GITHUB_ENV
+        fi
+    - name: Prepare targets configs
+      shell: bash
+      run: |
+        # Process the input string to remove leading dashes and quotes for build_targets, then format it for Docker
+        input_string="${{ inputs.configs }}"
+        if [ ! -z "$input_string" ]; then
+          configs=$(echo "$input_string" | tr '\n' ' ' | sed -e 's/- //g' | awk '{$1=$1; print}' | sed -e 's/ / --config=/g' -e 's/^/--config=/')
+          echo "Parsed string: $configs"
+          echo "configs=$configs" >> $GITHUB_ENV
+        else
+          echo "configs=" >> $GITHUB_ENV
+        fi
+    - name: Prepare targets options
+      shell: bash
+      run: |
+        # Process the input string to remove leading dashes and quotes for build_targets, then format it for Docker
+        input_string="${{ inputs.options }}"
+        if [ ! -z "$input_string" ]; then
+          options=$(echo "$input_string" | tr '\n' ' ' | sed -e 's/- //g' | awk '{$1=$1; print}')
+          echo "Parsed string: $options"
+          echo "options=$options" >> $GITHUB_ENV
+        else
+          echo "options=" >> $GITHUB_ENV
+        fi
+    - name: Run docker image
+      shell: bash
+      run: |
+        docker run --rm \
+        $env_vars \
+        $vol_bids \
+        -v ${{ inputs.output_user_cache}}:/output_user_cache \
+        -w ${{ inputs.workdir }} \
+        ${{ inputs.image }} \
+        /bin/bash -c " \
+          bazel \
+          --output_user_root=/output_user_cache/bazel \
+          ${{ inputs.command }} \
+          $configs \
+          $targets \
+          $options"
