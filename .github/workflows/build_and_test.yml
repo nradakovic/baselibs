@@ -30,17 +30,14 @@ jobs:
         uses: bazel-contrib/setup-bazel@0.9.1
       # This step is needed due to issue with the Clang Bazel toolchain setup
       # Bug ticket: https://github.com/eclipse-score/score/issues/1104
-      - name: Install LLVM and Clang
-      #   uses: KyleMayes/install-llvm-action@v2
-      #   with:
-      #     version: "16.0.0"
+      - name: Clang
         run: |
           sudo apt-get update
           sudo apt-get install -y clang
-      # - name: Install deps
-      #   run: |
-      #     sudo apt-get update && sudo apt-get install -y libtinfo5
+      - name: Install deps
+        run: |
+          wget http://security.ubuntu.com/ubuntu/pool/universe/n/ncurses/libtinfo5_6.3-2ubuntu0.1_amd64.deb
+          sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
       - name: Bazel build & test baselibs target(s)
         run: |
           bazel test //score/... --keep_going
-          echo | clang -v -E -x c - 2>&1 
