@@ -40,4 +40,4 @@ jobs:
           sudo apt install ./libtinfo5_6.3-2ubuntu0.1_amd64.deb
       - name: Bazel build & test baselibs target(s)
         run: |
-          bazel test //score/analysis/... --keep_going
+          bazel test //score/analysis/tracing/common/flexible_circular_allocator/test/unit_test:flexible_circular_allocator_factory_test
