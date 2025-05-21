@@ -21,6 +21,7 @@
 #include "score/os/sys_poll_impl.h"
 #include "score/os/unistd.h"
 
+#include <thread>
 #include <score/expected.hpp>
 #include <score/utility.hpp>
 
